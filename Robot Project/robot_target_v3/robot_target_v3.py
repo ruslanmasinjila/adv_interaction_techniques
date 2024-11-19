@@ -25,15 +25,18 @@ target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 50), rand
 # Initialize variables
 dragging = False
 speed = 0.1  # Speed factor for moving robot
+speed_manual_mode = 0.2
+speed_automatic_mode   = 0.1
 mode = "manual"  # Set mode to either "manual" or "automatic"
+manual_count = 10
+automatic_count = 5
 
 # Create display
-#screen = pygame.display.set_mode((WIDTH, HEIGHT))
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE) 
 pygame.display.set_caption("Pygame Robot Game")
 
 # Font for displaying mode
-font = pygame.font.SysFont(None, 24)
+font = pygame.font.SysFont(None, 50)
 
 # Main game loop
 while True:
@@ -70,6 +73,7 @@ while True:
         distance = math.hypot(dx, dy)
 
         if distance > 1:  # Only move if there's a distance
+            speed = speed_manual_mode
             dx, dy = dx / distance, dy / distance  # Normalize direction
             robot_rect.centerx += dx * distance * speed
             robot_rect.centery += dy * distance * speed
@@ -86,6 +90,7 @@ while True:
         distance = math.hypot(dx, dy)
 
         if distance > 1:  # Only move if there's a distance
+            speed = speed_automatic_mode
             dx, dy = dx / distance, dy / distance  # Normalize direction
             robot_rect.centerx += dx * speed * 10  # Increase speed for automatic mode
             robot_rect.centery += dy * speed * 10
@@ -103,6 +108,13 @@ while True:
     # Check collision with target
     if robot_rect.colliderect(target_rect):
         target_rect.topleft = (random.randint(50, WIDTH - 50), random.randint(50, HEIGHT - 50))
+        if(mode == "manual"):
+            manual_count = manual_count - 1
+            print(manual_count)
+        else:
+            automatic_count = automatic_count - 1
+            print(automatic_count)
+            
 
     # Draw target
     screen.blit(target_image, target_rect)
