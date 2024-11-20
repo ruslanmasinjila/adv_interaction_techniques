@@ -30,9 +30,11 @@ speed_automatic_mode = 0.1
 mode = "manual"  # Set mode to either "manual" or "automatic"
 manual_count = 10
 automatic_count = 5
-countdown_time = 5  # Countdown duration in seconds
+main_countdown_time = 60  # Main countdown timer in seconds
+repair_countdown_time = 5  # Repair countdown duration in seconds
 repairing = False
 repair_start_time = None
+main_timer_start = time.time()  # Start time of the main countdown
 
 # Create display
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -41,14 +43,23 @@ pygame.display.set_caption("Pygame Robot Game")
 # Font for displaying mode and messages
 font = pygame.font.SysFont(None, 50)
 
-# Function to display the countdown
+# Function to display the repair message
 def show_repair_message(screen, font, countdown):
     message = f"Repairing Robot, please wait... {countdown}s"
     text = font.render(message, True, (255, 0, 0))
     rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     screen.blit(text, rect)
 
+# Function to calculate remaining time for the main countdown
+def calculate_main_timer(main_timer_start, paused_time):
+    if paused_time is not None:
+        return main_countdown_time - paused_time
+    else:
+        return main_countdown_time - (time.time() - main_timer_start)
+
 # Main game loop
+paused_time = None  # Tracks paused time during repairs
+
 while True:
     screen.fill(WHITE)
 
@@ -75,18 +86,29 @@ while True:
     # Countdown logic
     if repairing:
         elapsed_time = time.time() - repair_start_time
-        remaining_time = countdown_time - int(elapsed_time)
+        remaining_repair_time = repair_countdown_time - int(elapsed_time)
 
-        if remaining_time <= 0:
+        if remaining_repair_time <= 0:
             repairing = False
-            # Reset counters after repair
             manual_count = 10
             automatic_count = 5
+            main_timer_start = time.time() - (paused_time if paused_time else 0)  # Resume main timer
+            paused_time = None
         else:
-            show_repair_message(screen, font, remaining_time)
+            show_repair_message(screen, font, remaining_repair_time)
             pygame.display.flip()
             pygame.time.Clock().tick(60)
             continue  # Skip the rest of the loop during repair
+
+    # Main countdown timer
+    remaining_main_time = calculate_main_timer(main_timer_start, paused_time)
+    if remaining_main_time <= 0:
+        game_over_text = font.render("Game Over! Time's up!", True, (255, 0, 0))
+        screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
+        pygame.display.flip()
+        pygame.time.wait(3000)
+        pygame.quit()
+        sys.exit()
 
     # Manual mode: Move robot if dragging
     if mode == "manual" and dragging:
@@ -136,14 +158,17 @@ while True:
         if manual_count <= 0 or automatic_count <= 0:
             repairing = True
             repair_start_time = time.time()
+            paused_time = time.time() - main_timer_start  # Pause main timer
             dragging = False  # Reset dragging state
 
     # Draw target
     screen.blit(target_image, target_rect)
 
-    # Display mode
+    # Display mode and main timer
     mode_text = font.render(f"Mode: {mode.capitalize()} (Press 'M' for Manual, 'A' for Automatic)", True, (0, 0, 0))
+    timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
     screen.blit(mode_text, (10, 10))
+    screen.blit(timer_text, (10, 60))
 
     # Update display
     pygame.display.flip()
