@@ -8,7 +8,8 @@ import time
 pygame.init()
 
 # Constants
-WIDTH, HEIGHT = 1500, 800
+info = pygame.display.Info()
+WIDTH, HEIGHT = info.current_w, info.current_h
 WHITE = (255, 255, 255)
 
 # Load images
