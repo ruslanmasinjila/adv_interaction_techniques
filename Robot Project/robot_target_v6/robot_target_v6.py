@@ -21,27 +21,36 @@ target_image = pygame.transform.scale(target_image, (50, 50))
 
 # Get rects for positioning
 robot_rect = robot_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 50), random.randint(50, HEIGHT - 50)))
+target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 100), random.randint(50, HEIGHT - 100)))
 
 # Initialize variables
 dragging = False
 mode     = "manual"  # Set mode to either "manual" or "automatic"
 
-speed_manual       = random.choice([i / 100 for i in range(1, 8)])
+#########################################################################
+
+MAX_TARGETS_BEFORE_REPAIR_MANUAL        = random.choice([i for i in range(5, 12)])
+remaining_targets_before_repair_manual  = MAX_TARGETS_BEFORE_REPAIR_MANUAL
+speed_manual                            = random.choice([i / 100 for i in range(1, 8)])
+
+#########################################################################
+
+
+MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 12)])
+remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
 speed_automatic    = random.choice([i / 10 for i in range(1, 8)])
 
 
+#########################################################################
 
-manual_count = 10
-automatic_count = 5
-main_countdown_time = 60  # Main countdown timer in seconds
+main_countdown_timer = 60  # Main countdown timer in seconds
 repair_countdown_time = 5  # Repair countdown duration in seconds
 repairing = False
 repair_start_time = None
 main_timer_start = time.time()  # Start time of the main countdown
 
 # Create display
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption("Pygame Robot Game")
 
 # Font for displaying mode and messages
@@ -57,9 +66,9 @@ def show_repair_message(screen, font, countdown):
 # Function to calculate remaining time for the main countdown
 def calculate_main_timer(main_timer_start, paused_time):
     if paused_time is not None:
-        return main_countdown_time - paused_time
+        return main_countdown_timer - paused_time
     else:
-        return main_countdown_time - (time.time() - main_timer_start)
+        return main_countdown_timer - (time.time() - main_timer_start)
 
 # Main game loop
 paused_time = None  # Tracks paused time during repairs
@@ -72,15 +81,21 @@ while True:
             pygame.quit()
             sys.exit()
 
+        # Handle ESC key for quitting
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                sys.exit()
+
         # Mode switching with keyboard (only if not repairing)
-        elif event.type == pygame.KEYDOWN and not repairing:
+        if event.type == pygame.KEYDOWN and not repairing:
             if event.key == pygame.K_m:
                 mode = "manual"
             elif event.key == pygame.K_a:
                 mode = "automatic"
 
         # Manual mode: check for mouse button press over robot
-        elif mode == "manual" and not repairing:
+        if mode == "manual" and not repairing:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if robot_rect.collidepoint(event.pos):
                     dragging = True
@@ -94,8 +109,8 @@ while True:
 
         if remaining_repair_time <= 0:
             repairing = False
-            manual_count = 10
-            automatic_count = 5
+            remaining_targets_before_repair_manual      = MAX_TARGETS_BEFORE_REPAIR_MANUAL
+            remaining_targets_before_repair_automatic   = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
             main_timer_start = time.time() - (paused_time if paused_time else 0)  # Resume main timer
             paused_time = None
         else:
@@ -153,13 +168,13 @@ while True:
 
     # Check collision with target
     if robot_rect.colliderect(target_rect):
-        target_rect.topleft = (random.randint(50, WIDTH - 50), random.randint(50, HEIGHT - 50))
+        target_rect.topleft = (random.randint(50, WIDTH - 100), random.randint(50, HEIGHT - 100))
         if mode == "manual":
-            manual_count -= 1
+            remaining_targets_before_repair_manual -= 1
         else:
-            automatic_count -= 1
+            remaining_targets_before_repair_automatic -= 1
 
-        if manual_count <= 0 or automatic_count <= 0:
+        if remaining_targets_before_repair_manual <= 0 or remaining_targets_before_repair_automatic <= 0:
             repairing = True
             repair_start_time = time.time()
             paused_time = time.time() - main_timer_start  # Pause main timer
