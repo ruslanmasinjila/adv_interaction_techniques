@@ -32,12 +32,17 @@ dragging = False
 mode = "manual"  # Set mode to either "manual" or "automatic"
 main_countdown_time = 60  # Main countdown timer in seconds
 
+#########################################################################################
 # Manual mode variables
 MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(5, 11)])
 remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
 speed_manual = random.choice([i / 100 for i in range(2, 7)])
 repair_countdown_time_manual = random.choice([i for i in range(5, 11)])
 total_targets_acquired_manual = 0
+live_active_time_manual = 0
+last_time_manual = None  # Tracks the last timestamp when manual mode was active
+
+#########################################################################################
 
 # Automatic mode variables
 MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 11)])
@@ -47,6 +52,8 @@ repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])
 total_targets_acquired_automatic = 0
 live_active_time_automatic = 0
 last_time_automatic = None  # Tracks the last timestamp when automatic mode was active
+
+#######################################################################################
 
 # Repair variables
 repairing = False
@@ -100,8 +107,10 @@ while True:
             if event.key == pygame.K_m:
                 mode = "manual"
                 last_time_automatic = None  # Stop tracking time for automatic mode
+                last_time_manual = time.time()  # Start tracking time for automatic mode
             elif event.key == pygame.K_a:
                 mode = "automatic"
+                last_time_manual = None  # Stop tracking time for automatic mode
                 last_time_automatic = time.time()  # Start tracking time for automatic mode
 
         # Manual mode: check for mouse button press over robot
@@ -191,11 +200,17 @@ while True:
 
     # Track time spent in automatic mode
     if mode == "automatic" and not repairing:
+        last_time_manual = None
         if last_time_automatic is not None:
             live_active_time_automatic += time.time() - last_time_automatic
         last_time_automatic = time.time()
-    else:
-        last_time_automatic = None  # Stop updating time when not in automatic mode
+        
+
+    if mode == "manual" and not repairing:
+        last_time_automatic = None 
+        if last_time_manual is not None:
+            live_active_time_manual += time.time() - last_time_manual
+        last_time_manual = time.time()
 
     # Draw target
     screen.blit(target_image, target_rect)
@@ -206,10 +221,12 @@ while True:
     )
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
     automatic_mode_time_text = font.render(f"Automatic Mode Time: {int(live_active_time_automatic)}s", True, (0, 0, 0))
+    manual_mode_time_text = font.render(f"Manual Mode Time: {int(live_active_time_manual)}s", True, (0, 0, 0))
 
     screen.blit(mode_text, (10, 10))
     screen.blit(timer_text, (10, 60))
     screen.blit(automatic_mode_time_text, (10, 110))
+    screen.blit(manual_mode_time_text, (10, 110))
 
     # Update display
     pygame.display.flip()
