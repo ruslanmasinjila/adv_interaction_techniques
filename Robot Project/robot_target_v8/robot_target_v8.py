@@ -36,24 +36,31 @@ main_countdown_time = 60  # Main countdown timer in seconds
 
 MAX_TARGETS_BEFORE_REPAIR_MANUAL        = random.choice([i for i in range(5, 11)])
 remaining_targets_before_repair_manual  = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-speed_manual                            = random.choice([i / 100 for i in range(1, 6)])
+speed_manual                            = random.choice([i / 100 for i in range(2, 7)])
 repair_countdown_time_manual = random.choice([i for i in range(5, 11)])  # Repair countdown duration in seconds in manual mode
+total_targets_acquired_manual = 0
+start_time_manual             = None
+total_active_time_manual      = 0
+
 
 #########################################################################
 
 
 MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 11)])
 remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-speed_automatic    = random.choice([i / 100 for i in range(1, 6)])
+speed_automatic    = random.choice([i / 100 for i in range(2, 7)])
 repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])  # Repair countdown duration in seconds in manual mode
+total_targets_acquired_automatic = 0
+start_time_automatic = None 
+total_active_time_automatic = 0
 
 
 #########################################################################
 
-
 repairing = False
 repair_start_time = None
 main_timer_start = time.time()  # Start time of the main countdown
+
 
 # Create display
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -78,6 +85,7 @@ def calculate_main_timer(main_timer_start, paused_time):
 
 # Main game loop
 paused_time = None  # Tracks paused time during repairs
+automatic_mode_time = 0  # Tracks time spent in automatic mode
 
 while True:
     screen.fill(WHITE)
@@ -105,8 +113,10 @@ while True:
         if event.type == pygame.KEYDOWN and not repairing:
             if event.key == pygame.K_m:
                 mode = "manual"
+                start_time_manual = time.time()  # Start timing when switching to manual mode
             elif event.key == pygame.K_a:
                 mode = "automatic"
+                start_time_automatic = time.time()  # Start timing when switching to automatic mode
 
         # Manual mode: check for mouse button press over robot
         if mode == "manual" and not repairing:
@@ -148,6 +158,7 @@ while True:
         pygame.quit()
         sys.exit()
 
+    
     # Manual mode: Move robot if dragging
     if mode == "manual" and dragging:
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -190,8 +201,10 @@ while True:
         target_rect.topleft = (random.randint(50, WIDTH - 100), random.randint(50, HEIGHT - 100))
         if mode == "manual":
             remaining_targets_before_repair_manual -= 1
+            total_targets_acquired_manual+=1
         else:
             remaining_targets_before_repair_automatic -= 1
+            total_targets_acquired_automatic+=1
 
         if remaining_targets_before_repair_manual <= 0 or remaining_targets_before_repair_automatic <= 0:
             repairing = True
@@ -205,10 +218,19 @@ while True:
     # Display mode and main timer
     mode_text = font.render(f"Mode: {mode.capitalize()} (Press 'M' for Manual, 'A' for Automatic). Press ESC to End simulation", True, (0, 0, 0))
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
+
+    # Track time spent in automatic mode
+    if mode == "automatic" and not repairing:
+        automatic_mode_time = time.time() - start_time_automatic
+    
+
+    # Display time spent in automatic mode
+    automatic_mode_time_text = font.render(f"Automatic Mode Time: {int(automatic_mode_time)}s", True, (0, 0, 0))
+
     screen.blit(mode_text, (10, 10))
     screen.blit(timer_text, (10, 60))
+    screen.blit(automatic_mode_time_text, (10, 110))
 
     # Update display
     pygame.display.flip()
     pygame.time.Clock().tick(60)
-
