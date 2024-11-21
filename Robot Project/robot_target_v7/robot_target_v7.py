@@ -34,18 +34,18 @@ main_countdown_time = 60  # Main countdown timer in seconds
 
 #########################################################################
 
-MAX_TARGETS_BEFORE_REPAIR_MANUAL        = random.choice([i for i in range(5, 12)])
+MAX_TARGETS_BEFORE_REPAIR_MANUAL        = random.choice([i for i in range(5, 11)])
 remaining_targets_before_repair_manual  = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-speed_manual                            = random.choice([i / 100 for i in range(1, 8)])
-repair_countdown_time_manual = random.choice([i for i in range(5, 16)])  # Repair countdown duration in seconds in manual mode
+speed_manual                            = random.choice([i / 100 for i in range(1, 6)])
+repair_countdown_time_manual = random.choice([i for i in range(5, 11)])  # Repair countdown duration in seconds in manual mode
 
 #########################################################################
 
 
-MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 12)])
+MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 11)])
 remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-speed_automatic    = random.choice([i / 10 for i in range(1, 8)])
-repair_countdown_time_automatic = random.choice([i for i in range(5, 16)])  # Repair countdown duration in seconds in manual mode
+speed_automatic    = random.choice([i / 100 for i in range(1, 6)])
+repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])  # Repair countdown duration in seconds in manual mode
 
 
 #########################################################################
@@ -56,11 +56,11 @@ repair_start_time = None
 main_timer_start = time.time()  # Start time of the main countdown
 
 # Create display
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("Pygame Robot Game")
 
 # Font for displaying mode and messages
-font = pygame.font.SysFont(None, 50)
+font = pygame.font.SysFont(None, 34)
 
 # Function to display the repair message
 def show_repair_message(screen, font, countdown):
@@ -92,6 +92,14 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+
+        if event.type == pygame.VIDEORESIZE:
+            WIDTH, HEIGHT = event.w, event.h
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+            # Optionally, reposition elements if needed
+            robot_rect.center = (WIDTH // 2, HEIGHT // 2)
+            target_rect.center = (random.randint(50, WIDTH - 100), random.randint(50, HEIGHT - 100))
+
 
         # Mode switching with keyboard (only if not repairing)
         if event.type == pygame.KEYDOWN and not repairing:
@@ -164,8 +172,8 @@ while True:
 
         if distance > 1:  # Only move if there's a distance
             dx, dy = dx / distance, dy / distance  # Normalize direction
-            robot_rect.centerx += dx * speed_automatic * 10
-            robot_rect.centery += dy * speed_automatic * 10
+            robot_rect.centerx += dx * distance * speed_automatic
+            robot_rect.centery += dy * distance * speed_automatic
 
             # Rotate robot image in direction of movement
             angle = math.degrees(math.atan2(-dy, dx))  # Invert y-axis for correct angle
@@ -195,7 +203,7 @@ while True:
     screen.blit(target_image, target_rect)
 
     # Display mode and main timer
-    mode_text = font.render(f"Mode: {mode.capitalize()} (Press 'M' for Manual, 'A' for Automatic)", True, (0, 0, 0))
+    mode_text = font.render(f"Mode: {mode.capitalize()} (Press 'M' for Manual, 'A' for Automatic). Press ESC to End simulation", True, (0, 0, 0))
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
     screen.blit(mode_text, (10, 10))
     screen.blit(timer_text, (10, 60))
