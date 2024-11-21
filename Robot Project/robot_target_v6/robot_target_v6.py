@@ -1,3 +1,6 @@
+# ROBOT SIMULATOR FOR ADVANCED INTERACTION TECHNIQUES PROJECT
+# AUTHOR: RUSLAN MASINJILA
+
 import pygame
 import sys
 import random
@@ -25,14 +28,16 @@ robot_rect = robot_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
 target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 100), random.randint(50, HEIGHT - 100)))
 
 # Initialize variables
-dragging = False
-mode     = "manual"  # Set mode to either "manual" or "automatic"
+dragging            = False
+mode                = "manual"  # Set mode to either "manual" or "automatic"
+main_countdown_time = 60  # Main countdown timer in seconds
 
 #########################################################################
 
 MAX_TARGETS_BEFORE_REPAIR_MANUAL        = random.choice([i for i in range(5, 12)])
 remaining_targets_before_repair_manual  = MAX_TARGETS_BEFORE_REPAIR_MANUAL
 speed_manual                            = random.choice([i / 100 for i in range(1, 8)])
+repair_countdown_time_manual = random.choice([i for i in range(5, 16)])  # Repair countdown duration in seconds in manual mode
 
 #########################################################################
 
@@ -40,12 +45,12 @@ speed_manual                            = random.choice([i / 100 for i in range(
 MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 12)])
 remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
 speed_automatic    = random.choice([i / 10 for i in range(1, 8)])
+repair_countdown_time_automatic = random.choice([i for i in range(5, 16)])  # Repair countdown duration in seconds in manual mode
 
 
 #########################################################################
 
-main_countdown_timer = 60  # Main countdown timer in seconds
-repair_countdown_time = 5  # Repair countdown duration in seconds
+
 repairing = False
 repair_start_time = None
 main_timer_start = time.time()  # Start time of the main countdown
@@ -67,9 +72,9 @@ def show_repair_message(screen, font, countdown):
 # Function to calculate remaining time for the main countdown
 def calculate_main_timer(main_timer_start, paused_time):
     if paused_time is not None:
-        return main_countdown_timer - paused_time
+        return main_countdown_time - paused_time
     else:
-        return main_countdown_timer - (time.time() - main_timer_start)
+        return main_countdown_time - (time.time() - main_timer_start)
 
 # Main game loop
 paused_time = None  # Tracks paused time during repairs
@@ -106,7 +111,12 @@ while True:
     # Countdown logic
     if repairing:
         elapsed_time = time.time() - repair_start_time
-        remaining_repair_time = repair_countdown_time - int(elapsed_time)
+
+        remaining_repair_time = None
+        if(mode == "manual"):
+            remaining_repair_time = repair_countdown_time_manual - int(elapsed_time)
+        elif(mode == "automatic"):
+            remaining_repair_time = repair_countdown_time_automatic - int(elapsed_time)
 
         if remaining_repair_time <= 0:
             repairing = False
