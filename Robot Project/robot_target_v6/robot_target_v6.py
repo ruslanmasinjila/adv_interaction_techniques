@@ -8,7 +8,7 @@ import time
 pygame.init()
 
 # Constants
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 1500, 800
 WHITE = (255, 255, 255)
 
 # Load images
@@ -25,9 +25,13 @@ target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 50), rand
 
 # Initialize variables
 dragging = False
-speed_manual_mode = 0.1
-speed_automatic_mode = 0.1
-mode = "manual"  # Set mode to either "manual" or "automatic"
+mode     = "manual"  # Set mode to either "manual" or "automatic"
+
+speed_manual       = random.choice([i / 100 for i in range(1, 8)])
+speed_automatic    = random.choice([i / 10 for i in range(1, 8)])
+
+
+
 manual_count = 10
 automatic_count = 5
 main_countdown_time = 60  # Main countdown timer in seconds
@@ -118,8 +122,8 @@ while True:
 
         if distance > 1:  # Only move if there's a distance
             dx, dy = dx / distance, dy / distance  # Normalize direction
-            robot_rect.centerx += dx * distance * speed_manual_mode
-            robot_rect.centery += dy * distance * speed_manual_mode
+            robot_rect.centerx += dx * distance * speed_manual
+            robot_rect.centery += dy * distance * speed_manual
 
             # Rotate robot image in direction of movement
             angle = math.degrees(math.atan2(-dy, dx))  # Invert y-axis for correct angle
@@ -134,8 +138,8 @@ while True:
 
         if distance > 1:  # Only move if there's a distance
             dx, dy = dx / distance, dy / distance  # Normalize direction
-            robot_rect.centerx += dx * speed_automatic_mode * 10
-            robot_rect.centery += dy * speed_automatic_mode * 10
+            robot_rect.centerx += dx * speed_automatic * 10
+            robot_rect.centery += dy * speed_automatic * 10
 
             # Rotate robot image in direction of movement
             angle = math.degrees(math.atan2(-dy, dx))  # Invert y-axis for correct angle
