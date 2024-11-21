@@ -123,6 +123,8 @@ while True:
 
     # Countdown logic
     if repairing:
+        last_time_manual    = None  # Stop tracking time for manual mode
+        last_time_automatic = None  # Stop tracking time for automatic mode
         elapsed_time = time.time() - repair_start_time
         remaining_repair_time = (
             repair_countdown_time_manual if mode == "manual" else repair_countdown_time_automatic
@@ -217,16 +219,16 @@ while True:
 
     # Display mode and main timer
     mode_text = font.render(
-        f"Mode: {mode.capitalize()} (Press 'M' for Manual, 'A' for Automatic). Press ESC to End simulation", True, (0, 0, 0)
+        f"Current Mode: {mode.capitalize()} [Press 'M' for Manual, 'A' for Automatic]. Press ESC to End simulation", True, (0, 0, 0)
     )
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
     automatic_mode_time_text = font.render(f"Automatic Mode Time: {int(live_active_time_automatic)}s", True, (0, 0, 0))
     manual_mode_time_text = font.render(f"Manual Mode Time: {int(live_active_time_manual)}s", True, (0, 0, 0))
 
     screen.blit(mode_text, (10, 10))
-    screen.blit(timer_text, (10, 60))
-    screen.blit(automatic_mode_time_text, (10, 110))
-    screen.blit(manual_mode_time_text, (10, 110))
+    screen.blit(timer_text, (10, 40))
+    screen.blit(automatic_mode_time_text, (10, 70))     # Below timer text
+    screen.blit(manual_mode_time_text, (10, 100))       # Below automatic mode text
 
     # Update display
     pygame.display.flip()
