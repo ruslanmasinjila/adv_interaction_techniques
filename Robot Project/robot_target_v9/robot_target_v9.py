@@ -1,5 +1,4 @@
 # ROBOT SIMULATOR FOR ADVANCED INTERACTION TECHNIQUES PROJECT
-# AUTHOR: RUSLAN MASINJILA
 
 import pygame
 import sys
@@ -30,26 +29,29 @@ target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 100), ran
 # Initialize variables
 dragging = False
 mode = "manual"  # Set mode to either "manual" or "automatic"
-main_countdown_time = 60  # Main countdown timer in seconds
+main_countdown_time = 45  # Main countdown timer in seconds
 
 #########################################################################################
 # Manual mode variables
-MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(5, 11)])
+
+MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(1, 11)])
 remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-speed_manual = random.choice([i / 100 for i in range(2, 7)])
-repair_countdown_time_manual = random.choice([i for i in range(5, 11)])
+speed_manual = random.choice([i / 100 for i in range(3, 10)])
+repair_countdown_time_manual = random.choice([i for i in range(1, 11)])
 total_targets_acquired_manual = 0
+total_repair_time_manual      = 0
 live_active_time_manual = 0
 last_time_manual = None  # Tracks the last timestamp when manual mode was active
 
 #########################################################################################
 
 # Automatic mode variables
-MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(5, 11)])
+MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(1, 11)])
 remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-speed_automatic = random.choice([i / 100 for i in range(2, 7)])
+speed_automatic = random.choice([i / 100 for i in range(3, 10)])
 repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])
 total_targets_acquired_automatic = 0
+total_repair_time_automatic      = 0
 live_active_time_automatic = 0
 last_time_automatic = None  # Tracks the last timestamp when automatic mode was active
 
@@ -136,6 +138,12 @@ while True:
             remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
             main_timer_start = time.time() - (paused_time if paused_time else 0)
             paused_time = None
+            if(mode=="manual"):
+                total_repair_time_manual    +=repair_countdown_time_manual
+            else:
+                total_repair_time_automatic +=repair_countdown_time_automatic
+
+            # TODO: Randomize variables again if mode is simulation mode is dynamic.
         else:
             show_repair_message(screen, font, remaining_repair_time)
             pygame.display.flip()
@@ -222,8 +230,12 @@ while True:
         f"Current Mode: {mode.capitalize()} [Press 'M' for Manual, 'A' for Automatic]. Press ESC to End simulation", True, (0, 0, 0)
     )
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
-    automatic_mode_time_text = font.render(f"Automatic Mode Time: {int(live_active_time_automatic)}s", True, (0, 0, 0))
-    manual_mode_time_text = font.render(f"Manual Mode Time: {int(live_active_time_manual)}s", True, (0, 0, 0))
+    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {total_repair_time_automatic} | Targets={total_targets_acquired_automatic} |", 
+                                              True, 
+                                              (0, 0, 0))
+    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {total_repair_time_manual} | Targets={total_targets_acquired_manual} |", 
+                                              True, 
+                                              (0, 0, 0))
 
     screen.blit(mode_text, (10, 10))
     screen.blit(timer_text, (10, 40))
