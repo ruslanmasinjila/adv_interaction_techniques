@@ -1,25 +1,10 @@
 # ROBOT SIMULATOR FOR ADVANCED INTERACTION TECHNIQUES PROJECT
-# "Usage: python robot_simulator.py <s|d>"
 
-import sys
 import pygame
 import sys
 import random
 import math
 import time
-
-if len(sys.argv) < 2:
-    print("Usage: python robot_simulator.py <s|d>")
-    sys.exit(1)
-
-simulation_mode = None
-if(sys.argv[1]=="s"):
-    simulation_mode = "static"
-elif(sys.argv[1]=="d"):
-    simulation_mode = "dynamic"
-
-
-
 
 
 # Initialize pygame
@@ -161,25 +146,7 @@ while True:
                 total_repair_time_manual    +=repair_countdown_time_manual
             else:
                 total_repair_time_automatic +=repair_countdown_time_automatic
-
-            # TODO: Randomize variables again if mode is simulation mode is dynamic.
-            if(simulation_mode == "dynamic"):
-                #########################################################################################
-                # Manual mode variables
-
-                MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(1, 11)])
-                remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-                speed_manual = random.choice([i / 100 for i in range(3, 10)])
-                repair_countdown_time_manual = random.choice([i for i in range(1, 11)])
-                #########################################################################################
-
-                # Automatic mode variables
-                MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(1, 11)])
-                remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-                speed_automatic = random.choice([i / 100 for i in range(3, 10)])
-                repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])
-
-                #######################################################################################
+                
         else:
             show_repair_message(screen, font, remaining_repair_time)
             pygame.display.flip()
