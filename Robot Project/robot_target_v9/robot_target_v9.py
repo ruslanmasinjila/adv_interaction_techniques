@@ -57,6 +57,7 @@ last_time_automatic = None  # Tracks the last timestamp when automatic mode was 
 
 #######################################################################################
 
+
 # Repair variables
 repairing = False
 repair_start_time = None
@@ -69,6 +70,26 @@ pygame.display.set_caption("Pygame Robot Game")
 
 # Font for displaying mode and messages
 font = pygame.font.SysFont(None, 34)
+
+
+def randomize_parameters():
+    #########################################################################################
+    # Manual mode variables
+
+    MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(1, 11)])
+    remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
+    speed_manual = random.choice([i / 100 for i in range(3, 10)])
+    repair_countdown_time_manual = random.choice([i for i in range(1, 11)])
+    #########################################################################################
+
+    # Automatic mode variables
+    MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(1, 11)])
+    remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
+    speed_automatic = random.choice([i / 100 for i in range(3, 10)])
+    repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])
+
+    #######################################################################################
+
 
 # Function to display the repair message
 def show_repair_message(screen, font, countdown):
