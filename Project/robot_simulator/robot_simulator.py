@@ -127,17 +127,9 @@ def show_repair_message(screen, font, countdown):
 
 def display_results():
 
-    local_NEES_manual = NEES_manual
-    local_NEES_automatic = NEES_automatic
 
-    if(len(local_NEES_manual)==0):
-        local_NEES_manual = 0
-
-    if(len(local_NEES_automatic)==0):
-        local_NEES_automatic = 0
-
-    ANEES_manual    = np.mean(local_NEES_manual)
-    ANEES_automatic = np.mean(local_NEES_automatic)
+    ANEES_manual    = np.mean(NEES_manual)
+    ANEES_automatic = np.mean(NEES_automatic)
     ANEES_RELATIVE  = ANEES_automatic/ANEES_manual
 
 
@@ -148,7 +140,7 @@ def display_results():
         'Manual Mode': [live_active_time_manual, total_repair_time_manual, total_targets_acquired_manual, cost_for_all_targets_manual,ANEES_manual]
     })
 
-    df = df.round(2)
+
 
     # Create a styled table
     fig = go.Figure(data=[go.Table(
@@ -172,16 +164,16 @@ def display_results():
 
     trust_level = ""
     if(ANEES_RELATIVE>1):
-        trust_level = " (Operator is OPTIMISTIC about Robot's Performance)"
+        trust_level = " ( OVERTRUSTING ROBOT)"
     if(ANEES_RELATIVE > 0 and ANEES_RELATIVE < 1):
-        trust_level = " (Operator is PESSIMISTIC about Robot's Performance)"
+        trust_level = " ( UNDERTRUSTING ROBOT)"
 
 
     fig.update_layout(
-        title="RELATIVE ANEES =" + str(round(ANEES_RELATIVE,2)) + f"{trust_level}",
+        title="RELATIVE ANEES =" + str(round(ANEES_RELATIVE,5)) + f"{trust_level}",
         width=700,  # Width of the table
         height=400,  # Height of the table
-        margin=dict(l=50, r=50, t=40, b=20)  # Adjust margins to accommodate the title
+        margin=dict(l=25, r=25, t=40, b=20)  # Adjust margins to accommodate the title
     )
 
     fig.show()
