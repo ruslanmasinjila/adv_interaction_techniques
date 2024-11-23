@@ -38,44 +38,46 @@ rand_low, rand_high = 3,11
 #########################################################################################
 # Manual mode variables
 
-MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(rand_low, rand_high)])
+MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.uniform(rand_low, rand_high)
 remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-speed_manual = random.choice([i / 100 for i in range(rand_low, rand_high)])
-repair_countdown_time_manual  = random.choice([i for i in range(rand_low, rand_high)])
-cost_per_target_manual        = random.choice([i for i in range(rand_low, rand_high)])
+speed_manual = random.uniform(rand_low/100, rand_high/100)
+repair_countdown_time_manual  = random.uniform(rand_low, rand_high)
+cost_per_target_manual        = random.uniform(rand_low, rand_high)
 cost_for_all_targets_manual   = 0
 total_targets_acquired_manual = 0
 total_repair_time_manual      = 0
 live_active_time_manual       = 0
-last_time_manual = None  # Tracks the last timestamp when manual mode was active
+last_time_manual = None  
+NEES_manual = []
 
 #########################################################################################
 
 # Automatic mode variables
-MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(rand_low, rand_high)])
+MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.uniform(rand_low, rand_high)
 remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-speed_automatic = random.choice([i / 100 for i in range(rand_low, rand_high)])
-repair_countdown_time_automatic  = random.choice([i for i in range(rand_low, rand_high)])
-cost_per_target_automatic        = random.choice([i for i in range(rand_low, rand_high)])
+speed_automatic = random.uniform(rand_low/100, rand_high/100)
+repair_countdown_time_automatic  = random.uniform(rand_low, rand_high)
+cost_per_target_automatic        = random.uniform(rand_low, rand_high)
 cost_for_all_targets_automatic   = 0
 total_targets_acquired_automatic = 0
 total_repair_time_automatic      = 0
 live_active_time_automatic       = 0
-last_time_automatic = None  # Tracks the last timestamp when automatic mode was active
+last_time_automatic = None  
+NEES_automatic = []
 
 #######################################################################################
 
 # For ANEES
-variance    = np.var(range(3,11))
+variance    = ((rand_high-rand_low)**2)/12
 dim         = 4 # Number of variables
 
 
-best_state  = [min(1/speed_manual,1/speed_automatic),
-               min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
-               min(repair_countdown_time_manual,repair_countdown_time_automatic),
-               min(cost_per_target_manual,cost_per_target_automatic)] 
+optimal_state  = [  min(1/speed_manual,1/speed_automatic),
+                    min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
+                    min(repair_countdown_time_manual,repair_countdown_time_automatic),
+                    min(cost_per_target_manual,cost_per_target_automatic)] 
 
-NEES = []
+
 
 
 #######################################################################################
@@ -99,7 +101,7 @@ font = pygame.font.SysFont(None, 34)
 
 # Function to display the repair message
 def show_repair_message(screen, font, countdown):
-    message = f"Repairing Robot, please wait... {countdown}s"
+    message = f"Repairing Robot, please wait... {int(countdown)}s"
     text = font.render(message, True, (255, 0, 0))
     rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     screen.blit(text, rect)
@@ -159,7 +161,7 @@ while True:
             repair_countdown_time_manual if mode == "manual" else repair_countdown_time_automatic
         ) - int(elapsed_time)
 
-        if remaining_repair_time <= 0:
+        if remaining_repair_time <= 1:
             repairing = False
             remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
             remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
@@ -224,13 +226,13 @@ while True:
         if mode == "manual":
             remaining_targets_before_repair_manual -= 1
             total_targets_acquired_manual += 1
-            cost_for_all_targets_manual   += cost_per_target_manual
+            cost_for_all_targets_manual   += int(cost_per_target_manual)
 
             # Calculate NEES here
         else:
             remaining_targets_before_repair_automatic -= 1
             total_targets_acquired_automatic += 1
-            cost_for_all_targets_automatic   += cost_per_target_automatic
+            cost_for_all_targets_automatic   += int(cost_per_target_automatic)
 
             # Calculate NEES here
 
@@ -263,11 +265,11 @@ while True:
     )
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
 
-    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {total_repair_time_manual} | Targets={total_targets_acquired_manual} | Cost= ${cost_for_all_targets_manual}", 
+    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {int(total_repair_time_manual)} | Targets={total_targets_acquired_manual} | Cost= ${cost_for_all_targets_manual}", 
                                               True, 
                                               (0, 0, 0))
     
-    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {total_repair_time_automatic} | Targets={total_targets_acquired_automatic} | Cost = ${cost_for_all_targets_automatic}", 
+    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {int(total_repair_time_automatic)} | Targets={total_targets_acquired_automatic} | Cost = ${cost_for_all_targets_automatic}", 
                                               True, 
                                               (0, 0, 0))
 
