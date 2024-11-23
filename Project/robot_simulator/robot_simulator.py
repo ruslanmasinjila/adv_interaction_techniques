@@ -204,10 +204,6 @@ def display_results():
     plt.tight_layout()  # Optimize layout
     plt.show()
 
-
-
-
-
 # Function to calculate remaining time for the main countdown
 def calculate_main_timer(main_timer_start, paused_time):
     if paused_time is not None:
