@@ -129,108 +129,89 @@ def show_repair_message(screen, font, countdown):
 
 
 def display_results():
-
-
-    ANEES_manual    = np.mean(NEES_manual)
+    ANEES_manual = np.mean(NEES_manual)
     ANEES_automatic = np.mean(NEES_automatic)
-    ANEES_RELATIVE  = ANEES_automatic/ANEES_manual
+    ANEES_RELATIVE = ANEES_automatic / ANEES_manual
 
-
-
-    # System Variables Dataframe
-
+    # System Variables DataFrame
     system_variables = pd.DataFrame({
         'System Variables': ['Time To Target', 'Breakdown Frequency', 'Down Time', 'Cost Per Target'],
-        'Automatic Mode': [1/speed_automatic, 
-                           1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC, 
-                           repair_countdown_time_automatic, 
-                           cost_per_target_automatic,
-                            ],
-        'Manual Mode': [1/speed_manual, 
-                           1/MAX_TARGETS_BEFORE_REPAIR_MANUAL, 
-                           repair_countdown_time_manual, 
-                           cost_per_target_manual,
-                            ],
-    })
-    system_variables = system_variables.round(2)
+        'Automatic Mode': [1 / speed_automatic,
+                           1 / MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC,
+                           repair_countdown_time_automatic,
+                           cost_per_target_automatic],
+        'Manual Mode': [1 / speed_manual,
+                        1 / MAX_TARGETS_BEFORE_REPAIR_MANUAL,
+                        repair_countdown_time_manual,
+                        cost_per_target_manual],
+    }).round(2)
 
-    # Performance Variables Dataframe
+    # Performance Variables DataFrame
     performance_variables = pd.DataFrame({
-        'Performance Variables': ['Active Time', 'Repair Time / Active Time', 'Targets Acquired / Active Time', 'Total Operational Cost / Active Time'],
-        'Automatic Mode': [live_active_time_automatic, 
-                           total_repair_time_automatic/live_active_time_automatic, 
-                           total_targets_acquired_automatic/live_active_time_automatic, 
-                           cost_for_all_targets_automatic/live_active_time_automatic,
-                            ],
-        'Manual Mode': [live_active_time_manual, 
-                        total_repair_time_manual/live_active_time_manual, 
-                        total_targets_acquired_manual/live_active_time_manual, 
-                        cost_for_all_targets_manual/live_active_time_manual,
-                            ]
-    })
-
-    performance_variables = performance_variables.round(2)
-
-
-    
+        'Performance Variables': ['Active Time', 'Repair Time / Active Time', 
+                                  'Targets Acquired / Active Time', 'Total Operational Cost / Active Time'],
+        'Automatic Mode': [live_active_time_automatic,
+                           total_repair_time_automatic / live_active_time_automatic,
+                           total_targets_acquired_automatic / live_active_time_automatic,
+                           cost_for_all_targets_automatic / live_active_time_automatic],
+        'Manual Mode': [live_active_time_manual,
+                        total_repair_time_manual / live_active_time_manual,
+                        total_targets_acquired_manual / live_active_time_manual,
+                        cost_for_all_targets_manual / live_active_time_manual]
+    }).round(2)
 
     # Create subplots
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))  # 1 row, 2 columns
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))  # Reduced figure size for better compactness
 
     # Function to style a table
     def style_table(ax, dataframe, title):
-        # Turn off axis
         ax.axis('off')
-
-        # Create table
         table = ax.table(
             cellText=dataframe.values,
             colLabels=dataframe.columns,
             loc='center',
-            cellLoc='center',  # Center align text
+            cellLoc='center',
         )
-
-        # Style table
         table.auto_set_font_size(False)
-        table.set_fontsize(12)
-        table.auto_set_column_width(col=list(range(len(dataframe.columns))))  # Dynamic column width
+        table.set_fontsize(10)
+        table.auto_set_column_width(col=list(range(len(dataframe.columns))))
 
-        # Add padding to cells
+        # Add padding and styling
         for (row, col), cell in table.get_celld().items():
-            cell.PAD = 0.05  # Add padding between cells
-            cell.set_height(0.1)  # Increase cell height for padding
-            if row == 0:  # Header row
-                cell.set_text_props(weight='bold')  # Bold header text
-                cell.set_facecolor('#5fba7d')  # Header background color
-                cell.set_text_props(color='white')  # Header text color
+            cell.PAD = 0.05
+            cell.set_height(0.1)
+            if row == 0:
+                cell.set_text_props(weight='bold')
+                cell.set_facecolor('#5fba7d')
+                cell.set_text_props(color='white')
             else:
-                cell.set_facecolor('#f5f5f5')  # Light gray for data rows
+                cell.set_facecolor('#f5f5f5')
 
-        # Set title
-        ax.set_title(title, fontweight='bold', fontsize=14)
+        # Adjust title position and style
+        ax.set_title(title, fontweight='bold', fontsize=12, pad=2)  # Add padding to reduce whitespace
 
     trust_level = ""
-    if(ANEES_RELATIVE == float('inf')):
+    if ANEES_RELATIVE == float('inf'):
         trust_level = "Remarks: The robot has PERFECT performance in either Manual or both Manual and Automatic Modes."
-    elif(ANEES_RELATIVE>1):
+    elif ANEES_RELATIVE > 1:
         trust_level = "Remarks: The Operator OVERTRUSTS the Robot's performance in Automatic Mode."
-    elif(ANEES_RELATIVE > 0 and ANEES_RELATIVE < 1):
+    elif 0 < ANEES_RELATIVE < 1:
         trust_level = "Remarks: The Operator UNDERTRUSTS the Robot's performance in Automatic Mode."
     else:
         trust_level = "Remarks: The Operator UNDERTRUSTS the Robot's PERFECT performance in Automatic Mode."
 
-    
+    # Plot the first DataFrame
+    style_table(axes[0], system_variables,
+                f'System Variables\nRelative ANEES = ANEES(automatic)/ANEES(manual) = {ANEES_RELATIVE:.2f}\n{trust_level}')
 
     # Plot the second DataFrame
-    style_table(axes[0], system_variables, f'System Variables\n Relative ANEES = ANEES(automatic)/ANEES(manual) = {ANEES_RELATIVE:.2f}\n' +f'{trust_level}')
-
-    # Plot the first DataFrame
     style_table(axes[1], performance_variables, 'Performance Variables')
 
-
-    # Adjust layout
-    plt.tight_layout()
+    # Fine-tune spacing between subplots
+    plt.subplots_adjust(wspace=0.3)  # Reduce horizontal spacing
+    plt.tight_layout()  # Optimize layout
     plt.show()
+
 
 
 
