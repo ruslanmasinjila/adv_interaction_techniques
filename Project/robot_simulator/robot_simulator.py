@@ -1,5 +1,4 @@
 # ROBOT SIMULATOR FOR ADVANCED INTERACTION TECHNIQUES PROJECT
-# "Usage: python robot_simulator.py <s|d>"
 
 import sys
 import pygame
@@ -10,16 +9,6 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
-if len(sys.argv) < 2:
-    print("Usage: python robot_simulator.py <s|d>")
-    sys.exit(1)
-
-simulation_mode = None
-if(sys.argv[1]=="s"):
-    simulation_mode = "static"
-elif(sys.argv[1]=="d"):
-    simulation_mode = "dynamic"
 
 
 # Initialize pygame
@@ -131,7 +120,6 @@ def show_repair_message(screen, font, countdown):
 def display_results():
     ANEES_manual = np.mean(NEES_manual)
     ANEES_automatic = np.mean(NEES_automatic)
-    ANEES_RELATIVE = ANEES_automatic / ANEES_manual
 
     # System Variables DataFrame
     system_variables = pd.DataFrame({
@@ -192,19 +180,21 @@ def display_results():
         # Adjust title position and style
         ax.set_title(title, fontweight='bold', fontsize=12, pad=2)  # Add padding to reduce whitespace
 
-    trust_level = ""
-    if ANEES_RELATIVE == float('inf'):
-        trust_level = "Remarks: The robot has OPTIMAL performance in either Manual or both Manual and Automatic Modes."
-    elif ANEES_RELATIVE > 1:
-        trust_level = "Remarks: The Operator OVERTRUSTS the Robot's performance in Automatic Mode."
-    elif 0 < ANEES_RELATIVE < 1:
-        trust_level = "Remarks: The Operator UNDERTRUSTS the Robot's performance in Automatic Mode."
-    else:
-        trust_level = "Remarks: The Operator UNDERTRUSTS the Robot's OPTIMAL performance in Automatic Mode."
+    trust_inequality = ""
+    trust_level_description = ""
+    if ANEES_automatic == ANEES_manual:
+        trust_inequality = "ANEES_automatic = ANEES_manual"
+        trust_level_description = "Remarks: The robot has OPTIMAL performance in both Manual and Automatic Modes."
+    elif ANEES_automatic > ANEES_manual:
+        trust_inequality = "ANEES_automatic > ANEES_manual"
+        trust_level_description = "Remarks: The Operator OVERTRUSTS the Robot's performance in Automatic Mode."
+    elif ANEES_automatic < ANEES_manual:
+        trust_inequality = "ANEES_automatic < ANEES_manual"
+        trust_level_description = "Remarks: The Operator UNDERTRUSTS the Robot's performance in Automatic Mode."
 
     # Plot the first DataFrame
     style_table(axes[0], system_variables,
-                f'System Variables\nRelative ANEES = {ANEES_RELATIVE:.5f}\n{trust_level}')
+                f'System Variables\nRelative ANEES: {trust_inequality}\n{trust_level_description}')
 
     # Plot the second DataFrame
     style_table(axes[1], performance_variables, 'Performance Variables')
@@ -285,33 +275,6 @@ while True:
                 total_repair_time_manual    +=repair_countdown_time_manual
             else:
                 total_repair_time_automatic +=repair_countdown_time_automatic
-
-            ###############################################################################
-            # Add Variability
-            if(simulation_mode == "dynamic"):
-
-                # Manual Variables
-                MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.uniform(rand_low, rand_high)
-                remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-                speed_manual = random.uniform(rand_low/100, rand_high/100)
-                repair_countdown_time_manual  = random.uniform(rand_low, rand_high)
-                cost_per_target_manual        = random.uniform(rand_low, rand_high)
-
-                # Automatic Variables
-                MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.uniform(rand_low, rand_high)
-                remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-                speed_automatic = random.uniform(rand_low/100, rand_high/100)
-                repair_countdown_time_automatic  = random.uniform(rand_low, rand_high)
-                cost_per_target_automatic        = random.uniform(rand_low, rand_high)
-
-
-                optimal_state  = np.array([  min(1/speed_manual,1/speed_automatic),
-                                    min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
-                                    min(repair_countdown_time_manual,repair_countdown_time_automatic),
-                                    min(cost_per_target_manual,cost_per_target_automatic)])
-
-            ###############################################################################
-
                 
         else:
             show_repair_message(screen, font, remaining_repair_time)
@@ -322,7 +285,7 @@ while True:
     # Main countdown timer
     remaining_main_time = calculate_main_timer(main_timer_start, paused_time)
     if remaining_main_time <= 0:
-        game_over_text = font.render("Game Over! Time's up!", True, (255, 0, 0))
+        game_over_text = font.render("Simulation is Over! Preparing Results...", True, (255, 0, 0))
         screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
         pygame.display.flip()
         pygame.time.wait(3000)
