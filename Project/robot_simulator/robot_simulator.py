@@ -152,6 +152,7 @@ def display_results():
                            cost_per_target_manual,
                             ],
     })
+    system_variables = system_variables.round(2)
 
     # Performance Variables Dataframe
     performance_variables = pd.DataFrame({
@@ -208,16 +209,29 @@ def display_results():
         # Set title
         ax.set_title(title, fontweight='bold', fontsize=14)
 
+    trust_level = ""
+    if(ANEES_RELATIVE == float('inf')):
+        trust_level = "Remarks: The robot has PERFECT performance in either Manual or both Manual and Automatic Modes."
+    elif(ANEES_RELATIVE>1):
+        trust_level = "Remarks: The Operator OVERTRUSTS the Robot's performance in Automatic Mode."
+    elif(ANEES_RELATIVE > 0 and ANEES_RELATIVE < 1):
+        trust_level = "Remarks: The Operator UNDERTRUSTS the Robot's performance in Automatic Mode."
+    else:
+        trust_level = "Remarks: The Operator UNDERTRUSTS the Robot's PERFECT performance in Automatic Mode."
+
+    
+
     # Plot the second DataFrame
-    style_table(axes[1], system_variables, 'System Variables')
+    style_table(axes[0], system_variables, f'System Variables\n Relative ANEES = ANEES(automatic)/ANEES(manual) = {ANEES_RELATIVE:.2f}\n' +f'{trust_level}')
 
     # Plot the first DataFrame
-    style_table(axes[0], performance_variables, 'Performance Variables')
+    style_table(axes[1], performance_variables, 'Performance Variables')
 
 
     # Adjust layout
     plt.tight_layout()
     plt.show()
+
 
 
 
