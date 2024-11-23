@@ -173,12 +173,8 @@ def display_results():
     trust_level = ""
     if(ANEES_RELATIVE>1):
         trust_level = " (Operator is OPTIMISTIC about Robot's Performance)"
-    elif(ANEES_RELATIVE>0 and ANEES_RELATIVE<1):
+    if(ANEES_RELATIVE > 0 and ANEES_RELATIVE < 1):
         trust_level = " (Operator is PESSIMISTIC about Robot's Performance)"
-    else:
-        if(live_active_time_automatic==0):
-            trust_level = "Automatic Mode was Never used"
-
 
 
     fig.update_layout(
