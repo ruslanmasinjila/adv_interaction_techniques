@@ -1,11 +1,25 @@
 # ROBOT SIMULATOR FOR ADVANCED INTERACTION TECHNIQUES PROJECT
+# "Usage: python robot_simulator.py <s|d>"
 
+import sys
 import pygame
 import sys
 import random
 import math
 import time
 import numpy as np
+import plotly.graph_objects as go
+import pandas as pd
+
+if len(sys.argv) < 2:
+    print("Usage: python robot_simulator.py <s|d>")
+    sys.exit(1)
+
+simulation_mode = None
+if(sys.argv[1]=="s"):
+    simulation_mode = "static"
+elif(sys.argv[1]=="d"):
+    simulation_mode = "dynamic"
 
 
 # Initialize pygame
@@ -68,14 +82,18 @@ NEES_automatic = []
 #######################################################################################
 
 # For ANEES
-variance    = ((rand_high-rand_low)**2)/12
+
 dim         = 4 # Number of variables
 
-
-optimal_state  = [  min(1/speed_manual,1/speed_automatic),
+variance    = ((rand_high-rand_low)**2)/12
+optimal_state  = np.array([  min(1/speed_manual,1/speed_automatic),
                     min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
                     min(repair_countdown_time_manual,repair_countdown_time_automatic),
-                    min(cost_per_target_manual,cost_per_target_automatic)] 
+                    min(cost_per_target_manual,cost_per_target_automatic)])
+
+P              = np.array([[variance,0,0,0],[0,variance,0,0],[0,0,variance,0],[0,0,0,variance]])
+
+P_inv          = np.linalg.inv(P)
 
 
 
@@ -120,11 +138,13 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
+            display_results()
             sys.exit()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
+                display_results()
                 sys.exit()
 
         if event.type == pygame.VIDEORESIZE:
@@ -171,6 +191,33 @@ while True:
                 total_repair_time_manual    +=repair_countdown_time_manual
             else:
                 total_repair_time_automatic +=repair_countdown_time_automatic
+
+            ###############################################################################
+            # Add Variability
+            if(simulation_mode == "dynamic"):
+
+                # Manual Variables
+                MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.uniform(rand_low, rand_high)
+                remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
+                speed_manual = random.uniform(rand_low/100, rand_high/100)
+                repair_countdown_time_manual  = random.uniform(rand_low, rand_high)
+                cost_per_target_manual        = random.uniform(rand_low, rand_high)
+
+                # Automatic Variables
+                MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.uniform(rand_low, rand_high)
+                remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
+                speed_automatic = random.uniform(rand_low/100, rand_high/100)
+                repair_countdown_time_automatic  = random.uniform(rand_low, rand_high)
+                cost_per_target_automatic        = random.uniform(rand_low, rand_high)
+
+
+                optimal_state  = np.array([  min(1/speed_manual,1/speed_automatic),
+                                    min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
+                                    min(repair_countdown_time_manual,repair_countdown_time_automatic),
+                                    min(cost_per_target_manual,cost_per_target_automatic)])
+
+            ###############################################################################
+
                 
         else:
             show_repair_message(screen, font, remaining_repair_time)
@@ -186,7 +233,7 @@ while True:
         pygame.display.flip()
         pygame.time.wait(3000)
         pygame.quit()
-        sys.exit()
+        #sys.exit()
 
     # Manual mode: Move robot if dragging
     if mode == "manual" and dragging:
@@ -228,13 +275,26 @@ while True:
             total_targets_acquired_manual += 1
             cost_for_all_targets_manual   += int(cost_per_target_manual)
 
-            # Calculate NEES here
+            state_manual  = np.array([  1/speed_manual,
+                                        1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,
+                                        repair_countdown_time_manual,
+                                        cost_per_target_manual])
+            
+            delta = optimal_state - state_manual
+            NEES_manual.append(delta@ P_inv @ delta.T)
+
         else:
             remaining_targets_before_repair_automatic -= 1
             total_targets_acquired_automatic += 1
             cost_for_all_targets_automatic   += int(cost_per_target_automatic)
 
-            # Calculate NEES here
+            state_automatic  = np.array([   1/speed_automatic,
+                                            1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC,
+                                            repair_countdown_time_automatic,
+                                            cost_per_target_automatic]) 
+            
+            delta = optimal_state - state_automatic
+            NEES_automatic.append(delta@ P_inv @ delta.T)
 
         if remaining_targets_before_repair_manual <= 0 or remaining_targets_before_repair_automatic <= 0:
             repairing = True
@@ -282,3 +342,40 @@ while True:
     # Update display
     pygame.display.flip()
     pygame.time.Clock().tick(60)
+
+
+    def display_results():
+        # Sample DataFrame
+        df = pd.DataFrame({
+            'Name': ['Alice', 'Bob', 'Charlie', 'Diana'],
+            'Age': [24, 27, 22, 29],
+            'Score': [88, 92, 95, 85]
+        })
+
+        # Create a styled table
+        fig = go.Figure(data=[go.Table(
+            header=dict(
+                values=list(df.columns),
+                fill_color='lightblue',  # Header background color
+                font=dict(size=16, color='darkblue'),  # Header font size and color
+                align='center',  # Align header text to center
+                line_color='darkblue'  # Border color for header
+            ),
+            cells=dict(
+                values=[df[col] for col in df.columns],
+                fill_color='white',  # Cell background color
+                font=dict(size=14, color='black'),  # Cell font size and color
+                align='center',  # Align cell text to center
+                line_color='gray'  # Border color for cells
+            )
+        )])
+
+        # Adjust figure size and add title
+        fig.update_layout(
+            title="Relative Trust = ANEES(automatic mode)/ANEES(manual mode) = XXX",  # Title
+            width=700,  # Width of the table
+            height=400,  # Height of the table
+            margin=dict(l=20, r=20, t=40, b=20)  # Adjust margins to accommodate the title
+        )
+
+        fig.show()
