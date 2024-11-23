@@ -89,11 +89,12 @@ NEES_manual = []
 dim         = 4 # Number of variables
 
 variance    = ((rand_high-rand_low)**2)/12
-optimal_state  = np.array([min(1/speed_manual,1/speed_automatic),
+optimal_state  = np.array([  min(1/speed_manual,1/speed_automatic),
                     min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
-                    min(repair_countdown_time_manual,repair_countdown_time_automatic)])
+                    min(repair_countdown_time_manual,repair_countdown_time_automatic),
+                    min(cost_per_target_manual,cost_per_target_automatic)])
 
-P              = np.array([[variance,0,0,],[0,variance,0,],[0,0,variance]])
+P              = np.array([[variance,0,0,0],[0,variance,0,0],[0,0,variance,0],[0,0,0,variance]])
 
 P_inv          = np.linalg.inv(P)
 
@@ -134,26 +135,30 @@ def display_results():
 
     # System Variables DataFrame
     system_variables = pd.DataFrame({
-        'System Variables': ['Time To Target', 'Breakdown Frequency', 'Down Time'],
+        'System Variables': ['Time To Target', 'Breakdown Frequency', 'Repair Downtime', 'Cost Per Target','ANEES'],
         'Automatic Mode': [1 / speed_automatic,
                            1 / MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC,
-                           repair_countdown_time_automatic],
+                           repair_countdown_time_automatic,
+                           cost_per_target_automatic,
+                           ANEES_automatic],
         'Manual Mode': [1 / speed_manual,
                         1 / MAX_TARGETS_BEFORE_REPAIR_MANUAL,
-                        repair_countdown_time_manual],
+                        repair_countdown_time_manual,
+                        cost_per_target_manual,
+                        ANEES_manual],
     }).round(5)
 
     # Performance Variables DataFrame
     performance_variables = pd.DataFrame({
-        'Performance Variables': ['Active Time (s)', 'Repair Time / Active Time', 
-                                  'Targets Acquired / Active Time', 'Total Operational Cost / Active Time'],
+        'Performance Variables': ['Active Time [REF]', 'Repair Time / Active Time', 
+                                  'Active Time / Targets Acquired', 'Total Operational Cost / Active Time'],
         'Automatic Mode': [live_active_time_automatic,
                            total_repair_time_automatic / live_active_time_automatic,
-                           total_targets_acquired_automatic / live_active_time_automatic,
+                           live_active_time_automatic / total_targets_acquired_automatic,
                            cost_for_all_targets_automatic / live_active_time_automatic],
         'Manual Mode': [live_active_time_manual,
                         total_repair_time_manual / live_active_time_manual,
-                        total_targets_acquired_manual / live_active_time_manual,
+                        live_active_time_manual/total_targets_acquired_manual,
                         cost_for_all_targets_manual / live_active_time_manual]
     }).round(5)
 
@@ -199,7 +204,7 @@ def display_results():
 
     # Plot the first DataFrame
     style_table(axes[0], system_variables,
-                f'System Variables\nRelative ANEES = ANEES(automatic)/ANEES(manual) = {ANEES_RELATIVE:.5f}\n{trust_level}')
+                f'System Variables\nRelative ANEES = {ANEES_RELATIVE:.5f}\n{trust_level}')
 
     # Plot the second DataFrame
     style_table(axes[1], performance_variables, 'Performance Variables')
@@ -270,7 +275,7 @@ while True:
             repair_countdown_time_manual if mode == "manual" else repair_countdown_time_automatic
         ) - int(elapsed_time)
 
-        if remaining_repair_time <= 1:
+        if remaining_repair_time <= 0:
             repairing = False
             remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
             remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
@@ -367,7 +372,8 @@ while True:
 
             state_manual  = np.array([  1/speed_manual,
                                         1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,
-                                        repair_countdown_time_manual])
+                                        repair_countdown_time_manual,
+                                        cost_per_target_manual])
             
             delta = optimal_state - state_manual
             NEES_manual.append(delta@ P_inv @ delta.T)
@@ -379,7 +385,8 @@ while True:
 
             state_automatic  = np.array([   1/speed_automatic,
                                             1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC,
-                                            repair_countdown_time_automatic]) 
+                                            repair_countdown_time_automatic,
+                                            cost_per_target_automatic]) 
             
             delta = optimal_state - state_automatic
             NEES_automatic.append(delta@ P_inv @ delta.T)
