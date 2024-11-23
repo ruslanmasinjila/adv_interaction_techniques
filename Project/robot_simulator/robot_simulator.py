@@ -194,7 +194,7 @@ def display_results():
 
     # Plot the first DataFrame
     style_table(axes[0], system_variables,
-                f'System Variables\nRelative ANEES: {trust_inequality}\n{trust_level_description}')
+                f'System Variables\n{trust_inequality}\n{trust_level_description}')
 
     # Plot the second DataFrame
     style_table(axes[1], performance_variables, 'Performance Variables')
