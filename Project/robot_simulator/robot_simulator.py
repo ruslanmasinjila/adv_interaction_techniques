@@ -127,8 +127,17 @@ def show_repair_message(screen, font, countdown):
 
 def display_results():
 
-    ANEES_manual    = np.mean(NEES_manual)
-    ANEES_automatic = np.mean(NEES_automatic)
+    local_NEES_manual = NEES_manual
+    local_NEES_automatic = NEES_automatic
+
+    if(len(local_NEES_manual)==0):
+        local_NEES_manual = 0
+
+    if(len(local_NEES_automatic)==0):
+        local_NEES_automatic = 0
+
+    ANEES_manual    = np.mean(local_NEES_manual)
+    ANEES_automatic = np.mean(local_NEES_automatic)
     ANEES_RELATIVE  = ANEES_automatic/ANEES_manual
 
 
@@ -164,10 +173,11 @@ def display_results():
     trust_level = ""
     if(ANEES_RELATIVE>1):
         trust_level = " (Operator is OPTIMISTIC about Robot's Performance)"
-    elif(ANEES_RELATIVE<1):
+    elif(ANEES_RELATIVE>0 and ANEES_RELATIVE<1):
         trust_level = " (Operator is PESSIMISTIC about Robot's Performance)"
     else:
-        " (Other)"
+        if(live_active_time_automatic==0):
+            trust_level = "Automatic Mode was Never used"
 
 
 
