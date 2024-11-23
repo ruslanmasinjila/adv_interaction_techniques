@@ -64,7 +64,21 @@ live_active_time_automatic       = 0
 last_time_automatic = None  # Tracks the last timestamp when automatic mode was active
 
 #######################################################################################
-variance = np.var(range(3,11))
+
+# For ANEES
+variance    = np.var(range(3,11))
+dim         = 4 # Number of variables
+
+
+best_state  = [min(1/speed_manual,1/speed_automatic),
+               min(1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC),
+               min(repair_countdown_time_manual,repair_countdown_time_automatic),
+               min(cost_per_target_manual,cost_per_target_automatic)] 
+
+NEES = []
+
+
+#######################################################################################
 
 
 
@@ -211,10 +225,14 @@ while True:
             remaining_targets_before_repair_manual -= 1
             total_targets_acquired_manual += 1
             cost_for_all_targets_manual   += cost_per_target_manual
+
+            # Calculate NEES here
         else:
             remaining_targets_before_repair_automatic -= 1
             total_targets_acquired_automatic += 1
             cost_for_all_targets_automatic   += cost_per_target_automatic
+
+            # Calculate NEES here
 
         if remaining_targets_before_repair_manual <= 0 or remaining_targets_before_repair_automatic <= 0:
             repairing = True
