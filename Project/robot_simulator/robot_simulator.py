@@ -5,6 +5,7 @@ import sys
 import random
 import math
 import time
+import numpy as np
 
 
 # Initialize pygame
@@ -32,31 +33,39 @@ dragging = False
 mode = "manual"  # Set mode to either "manual" or "automatic"
 main_countdown_time = 45  # Main countdown timer in seconds
 
+rand_low, rand_high = 3,11
+
 #########################################################################################
 # Manual mode variables
 
-MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(1, 11)])
+MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.choice([i for i in range(rand_low, rand_high)])
 remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
-speed_manual = random.choice([i / 100 for i in range(3, 10)])
-repair_countdown_time_manual = random.choice([i for i in range(1, 11)])
+speed_manual = random.choice([i / 100 for i in range(rand_low, rand_high)])
+repair_countdown_time_manual  = random.choice([i for i in range(rand_low, rand_high)])
+cost_per_target_manual        = random.choice([i for i in range(rand_low, rand_high)])
+cost_for_all_targets_manual   = 0
 total_targets_acquired_manual = 0
 total_repair_time_manual      = 0
-live_active_time_manual = 0
+live_active_time_manual       = 0
 last_time_manual = None  # Tracks the last timestamp when manual mode was active
 
 #########################################################################################
 
 # Automatic mode variables
-MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(1, 11)])
+MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.choice([i for i in range(rand_low, rand_high)])
 remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-speed_automatic = random.choice([i / 100 for i in range(3, 10)])
-repair_countdown_time_automatic = random.choice([i for i in range(5, 11)])
+speed_automatic = random.choice([i / 100 for i in range(rand_low, rand_high)])
+repair_countdown_time_automatic  = random.choice([i for i in range(rand_low, rand_high)])
+cost_per_target_automatic        = random.choice([i for i in range(rand_low, rand_high)])
+cost_for_all_targets_automatic   = 0
 total_targets_acquired_automatic = 0
 total_repair_time_automatic      = 0
-live_active_time_automatic = 0
+live_active_time_automatic       = 0
 last_time_automatic = None  # Tracks the last timestamp when automatic mode was active
 
 #######################################################################################
+variance = np.var(range(3,11))
+
 
 
 # Repair variables
@@ -201,9 +210,11 @@ while True:
         if mode == "manual":
             remaining_targets_before_repair_manual -= 1
             total_targets_acquired_manual += 1
+            cost_for_all_targets_manual   += cost_per_target_manual
         else:
             remaining_targets_before_repair_automatic -= 1
             total_targets_acquired_automatic += 1
+            cost_for_all_targets_automatic   += cost_per_target_automatic
 
         if remaining_targets_before_repair_manual <= 0 or remaining_targets_before_repair_automatic <= 0:
             repairing = True
@@ -233,12 +244,15 @@ while True:
         f"Current Mode: {mode.capitalize()} [Press 'M' for Manual, 'A' for Automatic]. Press ESC to End simulation", True, (0, 0, 0)
     )
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
-    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {total_repair_time_automatic} | Targets={total_targets_acquired_automatic} |", 
+
+    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {total_repair_time_manual} | Targets={total_targets_acquired_manual} | Cost= ${cost_for_all_targets_manual}", 
                                               True, 
                                               (0, 0, 0))
-    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {total_repair_time_manual} | Targets={total_targets_acquired_manual} |", 
+    
+    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {total_repair_time_automatic} | Targets={total_targets_acquired_automatic} | Cost = ${cost_for_all_targets_automatic}", 
                                               True, 
                                               (0, 0, 0))
+
 
     screen.blit(mode_text, (10, 10))
     screen.blit(timer_text, (10, 40))
