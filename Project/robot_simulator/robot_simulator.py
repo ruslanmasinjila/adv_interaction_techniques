@@ -45,7 +45,7 @@ target_rect = target_image.get_rect(center=(random.randint(50, WIDTH - 100), ran
 # Initialize variables
 dragging = False
 mode = "manual"  # Set mode to either "manual" or "automatic"
-main_countdown_time = 45  # Main countdown timer in seconds
+main_countdown_time = 30  # Main countdown timer in seconds
 
 rand_low, rand_high = 3,7
 
@@ -135,10 +135,20 @@ def display_results():
 
     # Sample DataFrame
     df = pd.DataFrame({
-        'Measured Quantity': ['Active Time', 'Repair Time', 'Targets Acquired', 'Operational Cost',"ANEES"],
-        'Automatic Mode': [live_active_time_automatic, total_repair_time_automatic, total_targets_acquired_automatic, cost_for_all_targets_automatic,ANEES_automatic],
-        'Manual Mode': [live_active_time_manual, total_repair_time_manual, total_targets_acquired_manual, cost_for_all_targets_manual,ANEES_manual]
+        'Measured Quantity': ['Active Time', 'Repair Time / Active Time', 'Targets Acquired / Active Time', 'Operational Cost / Active Time',"ANEES"],
+        'Automatic Mode': [live_active_time_automatic, 
+                           total_repair_time_automatic/live_active_time_automatic, 
+                           total_targets_acquired_automatic/live_active_time_automatic, 
+                           cost_for_all_targets_automatic/live_active_time_automatic,
+                           ANEES_automatic],
+        'Manual Mode': [live_active_time_manual, 
+                        total_repair_time_manual/live_active_time_manual, 
+                        total_targets_acquired_manual/live_active_time_manual, 
+                        cost_for_all_targets_manual/live_active_time_manual,
+                        ANEES_manual]
     })
+
+    df = df.round(2)
 
 
 
