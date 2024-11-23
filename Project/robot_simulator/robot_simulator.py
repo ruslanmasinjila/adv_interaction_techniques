@@ -8,7 +8,7 @@ import random
 import math
 import time
 import numpy as np
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import pandas as pd
 
 if len(sys.argv) < 2:
@@ -50,6 +50,22 @@ main_countdown_time = 30  # Main countdown timer in seconds
 rand_low, rand_high = 3,7
 
 #########################################################################################
+
+# Automatic mode variables
+MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.uniform(rand_low, rand_high)
+remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
+speed_automatic = random.uniform(rand_low/100, rand_high/100)
+repair_countdown_time_automatic  = random.uniform(rand_low, rand_high)
+cost_per_target_automatic        = random.uniform(rand_low, rand_high)
+cost_for_all_targets_automatic   = 0
+total_targets_acquired_automatic = 0
+total_repair_time_automatic      = 0
+live_active_time_automatic       = 0
+last_time_automatic = None  
+NEES_automatic = []
+
+
+#########################################################################################
 # Manual mode variables
 
 MAX_TARGETS_BEFORE_REPAIR_MANUAL = random.uniform(rand_low, rand_high)
@@ -66,20 +82,7 @@ NEES_manual = []
 
 #########################################################################################
 
-# Automatic mode variables
-MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC = random.uniform(rand_low, rand_high)
-remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
-speed_automatic = random.uniform(rand_low/100, rand_high/100)
-repair_countdown_time_automatic  = random.uniform(rand_low, rand_high)
-cost_per_target_automatic        = random.uniform(rand_low, rand_high)
-cost_for_all_targets_automatic   = 0
-total_targets_acquired_automatic = 0
-total_repair_time_automatic      = 0
-live_active_time_automatic       = 0
-last_time_automatic = None  
-NEES_automatic = []
 
-#######################################################################################
 
 # For ANEES
 
@@ -133,60 +136,90 @@ def display_results():
     ANEES_RELATIVE  = ANEES_automatic/ANEES_manual
 
 
-    # Sample DataFrame
-    df = pd.DataFrame({
-        'Measured Quantity': ['Active Time', 'Repair Time / Active Time', 'Targets Acquired / Active Time', 'Operational Cost / Active Time',"ANEES"],
+
+    # System Variables Dataframe
+
+    system_variables = pd.DataFrame({
+        'System Variables': ['Time To Target', 'Breakdown Frequency', 'Down Time', 'Cost Per Target'],
+        'Automatic Mode': [1/speed_automatic, 
+                           1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC, 
+                           repair_countdown_time_automatic, 
+                           cost_per_target_automatic,
+                            ],
+        'Manual Mode': [1/speed_manual, 
+                           1/MAX_TARGETS_BEFORE_REPAIR_MANUAL, 
+                           repair_countdown_time_manual, 
+                           cost_per_target_manual,
+                            ],
+    })
+
+    # Performance Variables Dataframe
+    performance_variables = pd.DataFrame({
+        'Performance Variables': ['Active Time', 'Repair Time / Active Time', 'Targets Acquired / Active Time', 'Total Operational Cost / Active Time'],
         'Automatic Mode': [live_active_time_automatic, 
                            total_repair_time_automatic/live_active_time_automatic, 
                            total_targets_acquired_automatic/live_active_time_automatic, 
                            cost_for_all_targets_automatic/live_active_time_automatic,
-                           ANEES_automatic],
+                            ],
         'Manual Mode': [live_active_time_manual, 
                         total_repair_time_manual/live_active_time_manual, 
                         total_targets_acquired_manual/live_active_time_manual, 
                         cost_for_all_targets_manual/live_active_time_manual,
-                        ANEES_manual]
+                            ]
     })
 
-    df = df.round(2)
+    performance_variables = performance_variables.round(2)
 
 
+    
 
-    # Create a styled table
-    fig = go.Figure(data=[go.Table(
-        header=dict(
-            values=list(df.columns),
-            fill_color='lightblue',  # Header background color
-            font=dict(size=16, color='darkblue'),  # Header font size and color
-            align='center',  # Align header text to center
-            line_color='darkblue'  # Border color for header
-        ),
-        cells=dict(
-            values=[df[col] for col in df.columns],
-            fill_color='white',  # Cell background color
-            font=dict(size=14, color='black'),  # Cell font size and color
-            align='center',  # Align cell text to center
-            line_color='gray'  # Border color for cells
+    # Create subplots
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))  # 1 row, 2 columns
+
+    # Function to style a table
+    def style_table(ax, dataframe, title):
+        # Turn off axis
+        ax.axis('off')
+
+        # Create table
+        table = ax.table(
+            cellText=dataframe.values,
+            colLabels=dataframe.columns,
+            loc='center',
+            cellLoc='center',  # Center align text
         )
-    )])
 
-    # Adjust figure size and add title
+        # Style table
+        table.auto_set_font_size(False)
+        table.set_fontsize(12)
+        table.auto_set_column_width(col=list(range(len(dataframe.columns))))  # Dynamic column width
 
-    trust_level = ""
-    if(ANEES_RELATIVE>1):
-        trust_level = " ( OVERTRUSTING ROBOT)"
-    if(ANEES_RELATIVE > 0 and ANEES_RELATIVE < 1):
-        trust_level = " ( UNDERTRUSTING ROBOT)"
+        # Add padding to cells
+        for (row, col), cell in table.get_celld().items():
+            cell.PAD = 0.05  # Add padding between cells
+            cell.set_height(0.1)  # Increase cell height for padding
+            if row == 0:  # Header row
+                cell.set_text_props(weight='bold')  # Bold header text
+                cell.set_facecolor('#5fba7d')  # Header background color
+                cell.set_text_props(color='white')  # Header text color
+            else:
+                cell.set_facecolor('#f5f5f5')  # Light gray for data rows
+
+        # Set title
+        ax.set_title(title, fontweight='bold', fontsize=14)
+
+    # Plot the second DataFrame
+    style_table(axes[1], system_variables, 'System Variables')
+
+    # Plot the first DataFrame
+    style_table(axes[0], performance_variables, 'Performance Variables')
 
 
-    fig.update_layout(
-        title="RELATIVE ANEES =" + str(round(ANEES_RELATIVE,5)) + f"{trust_level}",
-        width=700,  # Width of the table
-        height=400,  # Height of the table
-        margin=dict(l=25, r=25, t=40, b=20)  # Adjust margins to accommodate the title
-    )
+    # Adjust layout
+    plt.tight_layout()
+    plt.show()
 
-    fig.show()
+
 
 # Function to calculate remaining time for the main countdown
 def calculate_main_timer(main_timer_start, paused_time):
