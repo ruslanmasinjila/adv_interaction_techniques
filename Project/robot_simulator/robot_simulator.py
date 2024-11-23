@@ -72,7 +72,6 @@ NEES_manual = []
 #########################################################################################
 
 
-
 # For ANEES
 
 dim         = 4 # Number of variables
@@ -86,7 +85,6 @@ optimal_state  = np.array([  min(1/speed_manual,1/speed_automatic),
 P              = np.array([[variance,0,0,0],[0,variance,0,0],[0,0,variance,0],[0,0,0,variance]])
 
 P_inv          = np.linalg.inv(P)
-
 
 
 
@@ -123,7 +121,7 @@ def display_results():
 
     # System Variables DataFrame
     system_variables = pd.DataFrame({
-        'System Variables': ['Time To Target', 'Breakdown Frequency', 'Repair Downtime', 'Cost Per Target','ANEES'],
+        'System Variables': ['Time To Target', 'Breakdown Frequency', 'Repair Time', 'Cost Per Target','ANEES'],
         'Automatic Mode': [1 / speed_automatic,
                            1 / MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC,
                            repair_countdown_time_automatic,
@@ -183,21 +181,21 @@ def display_results():
     trust_inequality = ""
     trust_level_description = ""
     if ANEES_automatic == ANEES_manual:
-        trust_inequality = "ANEES_automatic = ANEES_manual"
+        trust_inequality = "Automatic Mode ANEES = Manual Mode ANEES"
         trust_level_description = "Remarks: The robot has OPTIMAL performance in both Manual and Automatic Modes."
     elif ANEES_automatic > ANEES_manual:
-        trust_inequality = "ANEES_automatic > ANEES_manual"
+        trust_inequality = "Automatic Mode ANEES > Manual Mode ANEES"
         trust_level_description = "Remarks: The Operator OVERTRUSTS the Robot's performance in Automatic Mode."
     elif ANEES_automatic < ANEES_manual:
-        trust_inequality = "ANEES_automatic < ANEES_manual"
+        trust_inequality = "Automatic Mode ANEES < Manual Mode ANEES"
         trust_level_description = "Remarks: The Operator UNDERTRUSTS the Robot's performance in Automatic Mode."
 
     # Plot the first DataFrame
     style_table(axes[0], system_variables,
-                f'System Variables\n{trust_inequality}\n{trust_level_description}')
+                f'SYSTEM VARIABLES\n\n{trust_inequality}\n\n{trust_level_description}')
 
     # Plot the second DataFrame
-    style_table(axes[1], performance_variables, 'Performance Variables')
+    style_table(axes[1], performance_variables, 'PERFORMANCE VARIABLES')
 
     # Fine-tune spacing between subplots
     plt.subplots_adjust(wspace=0.3)  # Reduce horizontal spacing
@@ -259,7 +257,7 @@ while True:
         elapsed_time = time.time() - repair_start_time
         remaining_repair_time = (
             repair_countdown_time_manual if mode == "manual" else repair_countdown_time_automatic
-        ) - int(elapsed_time)
+        ) - elapsed_time
 
         if remaining_repair_time <= 0:
             repairing = False
@@ -327,7 +325,7 @@ while True:
         if mode == "manual":
             remaining_targets_before_repair_manual -= 1
             total_targets_acquired_manual += 1
-            cost_for_all_targets_manual   += int(cost_per_target_manual)
+            cost_for_all_targets_manual   += cost_per_target_manual
 
             state_manual  = np.array([  1/speed_manual,
                                         1/MAX_TARGETS_BEFORE_REPAIR_MANUAL,
@@ -340,7 +338,7 @@ while True:
         else:
             remaining_targets_before_repair_automatic -= 1
             total_targets_acquired_automatic += 1
-            cost_for_all_targets_automatic   += int(cost_per_target_automatic)
+            cost_for_all_targets_automatic   += cost_per_target_automatic
 
             state_automatic  = np.array([   1/speed_automatic,
                                             1/MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC,
@@ -379,11 +377,11 @@ while True:
     )
     timer_text = font.render(f"Time Left: {int(remaining_main_time)}s", True, (0, 0, 0))
 
-    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {int(total_repair_time_manual)} | Targets={total_targets_acquired_manual} | Cost= ${cost_for_all_targets_manual}", 
+    manual_mode_time_text       = font.render(f"Manual       Mode: | Active Time={int(live_active_time_manual)}s | Repair Time = {int(total_repair_time_manual)} | Targets={total_targets_acquired_manual} | Cost= ${int(cost_for_all_targets_manual)}", 
                                               True, 
                                               (0, 0, 0))
     
-    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {int(total_repair_time_automatic)} | Targets={total_targets_acquired_automatic} | Cost = ${cost_for_all_targets_automatic}", 
+    automatic_mode_time_text    = font.render(f"Automatic Mode: | Active Time={int(live_active_time_automatic)}s | Repair Time = {int(total_repair_time_automatic)} | Targets={total_targets_acquired_automatic} | Cost = ${int(cost_for_all_targets_automatic)}", 
                                               True, 
                                               (0, 0, 0))
 
