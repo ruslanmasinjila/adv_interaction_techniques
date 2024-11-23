@@ -47,7 +47,7 @@ dragging = False
 mode = "manual"  # Set mode to either "manual" or "automatic"
 main_countdown_time = 45  # Main countdown timer in seconds
 
-rand_low, rand_high = 3,11
+rand_low, rand_high = 3,7
 
 #########################################################################################
 # Manual mode variables
@@ -124,6 +124,62 @@ def show_repair_message(screen, font, countdown):
     rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     screen.blit(text, rect)
 
+
+def display_results():
+
+    ANEES_manual    = np.mean(NEES_manual)
+    ANEES_automatic = np.mean(NEES_automatic)
+    ANEES_RELATIVE  = ANEES_automatic/ANEES_manual
+
+
+    # Sample DataFrame
+    df = pd.DataFrame({
+        'Measured Quantity': ['Active Time', 'Repair Time', 'Targets Acquired', 'Operational Cost',"ANEES"],
+        'Automatic Mode': [live_active_time_automatic, total_repair_time_automatic, total_targets_acquired_automatic, cost_for_all_targets_automatic,ANEES_automatic],
+        'Manual Mode': [live_active_time_manual, total_repair_time_manual, total_targets_acquired_manual, cost_for_all_targets_manual,ANEES_manual]
+    })
+
+    df = df.round(2)
+
+    # Create a styled table
+    fig = go.Figure(data=[go.Table(
+        header=dict(
+            values=list(df.columns),
+            fill_color='lightblue',  # Header background color
+            font=dict(size=16, color='darkblue'),  # Header font size and color
+            align='center',  # Align header text to center
+            line_color='darkblue'  # Border color for header
+        ),
+        cells=dict(
+            values=[df[col] for col in df.columns],
+            fill_color='white',  # Cell background color
+            font=dict(size=14, color='black'),  # Cell font size and color
+            align='center',  # Align cell text to center
+            line_color='gray'  # Border color for cells
+        )
+    )])
+
+    # Adjust figure size and add title
+
+    trust_level = ""
+    if(ANEES_RELATIVE>1):
+        trust_level = " (Operator is OPTIMISTIC about Robot's Performance)"
+    elif(ANEES_RELATIVE<1):
+        trust_level = " (Operator is PESSIMISTIC about Robot's Performance)"
+    else:
+        " (Other)"
+
+
+
+    fig.update_layout(
+        title="RELATIVE ANEES =" + str(round(ANEES_RELATIVE,2)) + f"{trust_level}",
+        width=700,  # Width of the table
+        height=400,  # Height of the table
+        margin=dict(l=50, r=50, t=40, b=20)  # Adjust margins to accommodate the title
+    )
+
+    fig.show()
+
 # Function to calculate remaining time for the main countdown
 def calculate_main_timer(main_timer_start, paused_time):
     if paused_time is not None:
@@ -181,7 +237,7 @@ while True:
             repair_countdown_time_manual if mode == "manual" else repair_countdown_time_automatic
         ) - int(elapsed_time)
 
-        if remaining_repair_time <= 1:
+        if remaining_repair_time <= 0:
             repairing = False
             remaining_targets_before_repair_manual = MAX_TARGETS_BEFORE_REPAIR_MANUAL
             remaining_targets_before_repair_automatic = MAX_TARGETS_BEFORE_REPAIR_AUTOMATIC
@@ -233,7 +289,8 @@ while True:
         pygame.display.flip()
         pygame.time.wait(3000)
         pygame.quit()
-        #sys.exit()
+        display_results()
+        sys.exit()
 
     # Manual mode: Move robot if dragging
     if mode == "manual" and dragging:
@@ -344,38 +401,4 @@ while True:
     pygame.time.Clock().tick(60)
 
 
-    def display_results():
-        # Sample DataFrame
-        df = pd.DataFrame({
-            'Name': ['Alice', 'Bob', 'Charlie', 'Diana'],
-            'Age': [24, 27, 22, 29],
-            'Score': [88, 92, 95, 85]
-        })
 
-        # Create a styled table
-        fig = go.Figure(data=[go.Table(
-            header=dict(
-                values=list(df.columns),
-                fill_color='lightblue',  # Header background color
-                font=dict(size=16, color='darkblue'),  # Header font size and color
-                align='center',  # Align header text to center
-                line_color='darkblue'  # Border color for header
-            ),
-            cells=dict(
-                values=[df[col] for col in df.columns],
-                fill_color='white',  # Cell background color
-                font=dict(size=14, color='black'),  # Cell font size and color
-                align='center',  # Align cell text to center
-                line_color='gray'  # Border color for cells
-            )
-        )])
-
-        # Adjust figure size and add title
-        fig.update_layout(
-            title="Relative Trust = ANEES(automatic mode)/ANEES(manual mode) = XXX",  # Title
-            width=700,  # Width of the table
-            height=400,  # Height of the table
-            margin=dict(l=20, r=20, t=40, b=20)  # Adjust margins to accommodate the title
-        )
-
-        fig.show()
